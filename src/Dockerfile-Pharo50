@@ -1,0 +1,56 @@
+# Dockerfile - Pharo 5.0
+# ref. 
+
+FROM ubuntu:xenial
+LABEL maintainer="Quentin Plessis <quentin@sorabito.com>"
+
+# --------------------
+# Pharo
+# --------------------
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends \
+    libc6:i386 \
+    libncurses5:i386 \
+    libstdc++6:i386 \
+    libfreetype6:i386 \
+    libssl1.0.0:i386 \
+    zlib1g:i386 \
+    libgl1-mesa-glx:i386 \
+    libx11-6:i386 \
+    libasound2:i386 \
+  && rm -rf /var/lib/apt/lists/*
+
+# --------------------
+# Pharo
+# --------------------
+
+RUN mkdir pharo && cd pharo \
+  && apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    unzip \
+  && curl get.pharo.org/50+vm | bash \
+  && mv ../pharo /usr/local/bin/ \
+  && apt-get remove -y \
+    curl \
+    unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/usr/local/bin/pharo:${PATH}"
+
+# --------------------
+# Setup
+# --------------------
+
+ADD ./launch-pharo.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/launch-pharo.sh
+
+# --------------------
+# Workspace
+# --------------------
+
+WORKDIR /root/data
+
+RUN cp /usr/local/bin/pharo/Pharo.* /root/data
+
+VOLUME [ "/root/data" ]
+
+CMD [ "/usr/local/bin/launch-pharo.sh" ]

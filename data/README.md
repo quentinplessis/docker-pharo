@@ -1,0 +1,1 @@
+Put Pharo image here.
