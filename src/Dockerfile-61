@@ -1,13 +1,16 @@
-# Dockerfile - Pharo 5.0
-# ref. https://github.com/quentinplessis/docker-pharo
-
 FROM ubuntu:xenial
-LABEL maintainer="Quentin Plessis <quentin@sorabito.com>"
+LABEL maintainer="Quentin Plessis <plequen00@gmail.com>"
+
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    python-software-properties \
+    supervisor \
+  && rm -rf /var/lib/apt/lists/*
 
 # --------------------
 # Pharo
 # --------------------
-RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends \
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
     libc6:i386 \
     libncurses5:i386 \
     libstdc++6:i386 \
@@ -23,10 +26,9 @@ RUN mkdir pharo && cd pharo \
   && apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
-  && curl get.pharo.org/50+vm | bash \
+  && curl get.pharo.org/61+vm | bash \
   && mv ../pharo /usr/local/bin/ \
   && apt-get remove -y \
-    curl \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
@@ -35,7 +37,7 @@ ENV PATH="/usr/local/bin/pharo:${PATH}"
 # --------------------
 # VNC
 # --------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     xvfb \
     x11vnc \
     icewm \
@@ -47,12 +49,18 @@ EXPOSE 5900
 # Setup
 # --------------------
 
-ADD ./launch-pharo-vnc.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/launch-pharo-vnc.sh
+ADD ./launch-pharo.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/launch-pharo.sh
+ADD ./setup-vnc.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/setup-vnc.sh
+ADD ./setup.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/setup.sh
 
 # --------------------
 # Workspace
 # --------------------
+
+COPY images /root/images
 
 WORKDIR /root/data
 
@@ -60,4 +68,12 @@ RUN cp /usr/local/bin/pharo/Pharo.* /root/data
 
 VOLUME [ "/root/data" ]
 
-CMD [ "/usr/local/bin/launch-pharo-vnc.sh" ]
+EXPOSE 9000
+
+# --------------------
+# Supervisor
+# --------------------
+COPY pharo-supervisord.conf /etc/supervisor/conf.d/pharo-supervisord.conf
+
+
+CMD [ "/bin/bash", "-l", "-c", "/usr/local/bin/setup.sh && /usr/bin/supervisord -n" ]

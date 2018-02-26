@@ -13,22 +13,24 @@ before_script:
   - export TRAVIS_TAG=travis-${TRAVIS_BUILD_ID}
   - export BRANCH=${TRAVIS_BRANCH/\//-}
   - export COMMIT=${TRAVIS_COMMIT::7}
+  - export IMAGE_REPOSITORY=${DOCKER_USERNAME}/pharo
 
   # Login to docker repository
   - docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 
 script:
-  # Build Pharo 5.0 docker images
-  - export IMAGE_REPOSITORY=${DOCKER_USERNAME}/pharo-50
+  # Build Pharo 5.0 docker image
   - make build-50
-  - docker tag pharo-50 ${IMAGE_REPOSITORY}:${TRAVIS_TAG}
-  - docker tag ${IMAGE_REPOSITORY}:${TRAVIS_TAG} ${IMAGE_REPOSITORY}:${BRANCH}
-  - docker tag ${IMAGE_REPOSITORY}:${TRAVIS_TAG} ${IMAGE_REPOSITORY}:${COMMIT}
+  - docker tag pharo-50 ${IMAGE_REPOSITORY}:5.0
+  - docker tag pharo-50 ${IMAGE_REPOSITORY}:5.0-${TRAVIS_TAG}
+  - docker tag pharo-50 ${IMAGE_REPOSITORY}:5.0-${BRANCH}
+  - docker tag pharo-50 ${IMAGE_REPOSITORY}:5.0-${COMMIT}
   - docker push ${IMAGE_REPOSITORY}
 
-  - export IMAGE_REPOSITORY=${DOCKER_USERNAME}/pharo-50-vnc
-  - make build-50-vnc
-  - docker tag pharo-50-vnc ${IMAGE_REPOSITORY}:${TRAVIS_TAG}
-  - docker tag ${IMAGE_REPOSITORY}:${TRAVIS_TAG} ${IMAGE_REPOSITORY}:${BRANCH}
-  - docker tag ${IMAGE_REPOSITORY}:${TRAVIS_TAG} ${IMAGE_REPOSITORY}:${COMMIT}
+  # Build Pharo 6.1 docker image
+  - make build-61
+  - docker tag pharo-61 ${IMAGE_REPOSITORY}:6.1
+  - docker tag pharo-61 ${IMAGE_REPOSITORY}:6.1-${TRAVIS_TAG}
+  - docker tag pharo-61 ${IMAGE_REPOSITORY}:6.1-${BRANCH}
+  - docker tag pharo-61 ${IMAGE_REPOSITORY}:6.1-${COMMIT}
   - docker push ${IMAGE_REPOSITORY}
